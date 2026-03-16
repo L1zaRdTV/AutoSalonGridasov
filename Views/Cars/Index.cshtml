@@ -28,11 +28,23 @@
     <span class="stat-chip"><i class="fa-solid fa-car-rear"></i> @Model.Cars.Count авто</span>
 </section>
 
+@if (Model.FilterErrors.Any())
+{
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach (var error in Model.FilterErrors)
+            {
+                <li>@error</li>
+            }
+        </ul>
+    </div>
+}
+
 <form method="get" class="glass-panel catalog-filter-panel rounded-4 p-3 p-lg-4 mb-4 ui-reveal">
     <div class="row g-2 g-lg-3">
         <div class="col-12 col-lg-4">
             <label class="form-label small text-muted mb-1">Поиск</label>
-            <input name="search" class="form-control" placeholder="Марка или модель" value="@Model.Search" />
+            <input name="search" class="form-control" placeholder="Марка или модель" value="@Model.Search" maxlength="120" />
         </div>
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Марка</label>
@@ -53,11 +65,11 @@
 
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Год от</label>
-            <input name="minYear" type="number" class="form-control" placeholder="2018" value="@Model.MinYear" />
+            <input name="minProductionDate" type="text" class="form-control" placeholder="00.00.0000" value="@Model.MinProductionDate" maxlength="10" pattern="^\d{2}\.\d{2}\.\d{4}$" />
         </div>
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Год до</label>
-            <input name="maxYear" type="number" class="form-control" placeholder="2025" value="@Model.MaxYear" />
+            <input name="maxProductionDate" type="text" class="form-control" placeholder="00.00.0000" value="@Model.MaxProductionDate" maxlength="10" pattern="^\d{2}\.\d{2}\.\d{4}$" />
         </div>
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Пробег до</label>

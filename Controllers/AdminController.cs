@@ -42,7 +42,7 @@ public class AdminController : Controller
     {
         if (!TryParseProductionDate(model.ProductionDate, out var parsedProductionDate))
         {
-            ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска должна быть в формате 00.00.0000.");
+            ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска указана неверно. Выберите дату из календаря.");
         }
         else
         {
@@ -99,7 +99,7 @@ public class AdminController : Controller
 
         if (!TryParseProductionDate(model.ProductionDate, out var parsedProductionDate))
         {
-            ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска должна быть в формате 00.00.0000.");
+            ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска указана неверно. Выберите дату из календаря.");
         }
         else
         {
@@ -275,7 +275,7 @@ public class AdminController : Controller
             Brand = car?.Brand ?? string.Empty,
             Model = car?.Model ?? string.Empty,
             Year = car?.Year ?? DateTime.UtcNow.Year,
-            ProductionDate = $"01.01.{car?.Year ?? DateTime.UtcNow.Year}",
+            ProductionDate = $"{car?.Year ?? DateTime.UtcNow.Year}-01-01",
             Price = car?.Price ?? 0,
             CategoryId = car?.CategoryId ?? 1,
             BodyType = car?.BodyType ?? "SUV",
@@ -357,7 +357,7 @@ public class AdminController : Controller
     {
         return DateTime.TryParseExact(
             dateValue,
-            "dd.MM.yyyy",
+            ["yyyy-MM-dd", "dd.MM.yyyy"],
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out parsedDate);

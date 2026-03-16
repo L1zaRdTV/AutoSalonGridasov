@@ -17,8 +17,8 @@ public class CarFormViewModel
     public string Model { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Введите дату выпуска.")]
-    [RegularExpression(@"^\d{2}\.\d{2}\.\d{4}$", ErrorMessage = "Дата выпуска должна быть в формате 00.00.0000.")]
-    public string ProductionDate { get; set; } = $"01.01.{DateTime.UtcNow.Year}";
+    [RegularExpression(@"^\d{4}-\d{2}-\d{2}$", ErrorMessage = "Дата выпуска указана неверно. Выберите дату из календаря.")]
+    public string ProductionDate { get; set; } = $"{DateTime.UtcNow:yyyy}-01-01";
 
     [Range(1990, 2100, ErrorMessage = "Год выпуска должен быть в диапазоне от 1990 до 2100.")]
     public int Year { get; set; } = DateTime.UtcNow.Year;

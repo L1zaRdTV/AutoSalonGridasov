@@ -1,0 +1,46 @@
+@model IEnumerable<AutoSalonGrida.Models.Order>
+@{
+    ViewData["Title"] = "Мои заказы";
+    string StatusBadgeClass(string status) => status switch
+    {
+        OrderStatuses.Approved => "badge bg-success",
+        OrderStatuses.Cancelled => "badge bg-danger",
+        _ => "badge text-bg-warning"
+    };
+}
+
+<h1 class="mb-4">Мои заказы</h1>
+@if (!Model.Any())
+{
+    <div class="glass-panel rounded-4 p-4 center-safe">
+        <p class="mb-0">У вас пока нет заказов.</p>
+    </div>
+}
+else
+{
+    @foreach (var order in Model)
+    {
+        <section class="certificate-card rounded-4 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h2 class="h4 mb-0">Сертификат покупки №@order.Id</h2>
+                <span class="@StatusBadgeClass(order.Status)">@order.Status</span>
+            </div>
+
+            <div class="certificate-grid mb-3">
+                <div><div class="label">ФИО покупателя</div><div>@order.User?.FullName</div></div>
+                <div><div class="label">Телефон</div><div>@(string.IsNullOrWhiteSpace(order.User?.PhoneNumber) ? "Не указан" : order.User?.PhoneNumber)</div></div>
+                <div><div class="label">Электронная почта</div><div>@order.User?.Email</div></div>
+                <div><div class="label">Дата покупки</div><div>@order.OrderDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div></div>
+                <div><div class="label">Сумма</div><div>@order.TotalPrice.ToString("N0") ₽</div></div>
+            </div>
+
+            <h3 class="h6">Информация об автомобиле</h3>
+            <ul class="mb-0">
+                @foreach (var item in order.Items)
+                {
+                    <li>@item.Car?.Brand @item.Car?.Model — @item.Quantity × @item.UnitPrice.ToString("N0") ₽</li>
+                }
+            </ul>
+        </section>
+    }
+}

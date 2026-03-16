@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - AutoSalon Grida</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    string NavClass(string controller, string? action = null)
+    {
+        var isActive = string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+            && (action == null || string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase));
+        return isActive ? "nav-link top-tab active" : "nav-link top-tab";
+    }
+}
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark main-nav sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index"><i class="fa-solid fa-car-side me-2 text-info"></i>AutoSalon Grida</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 nav-tabs-modern">
+                    <li class="nav-item"><a class="@NavClass("Home", "Index")" asp-controller="Home" asp-action="Index">Главная</a></li>
+                    <li class="nav-item"><a class="@NavClass("Cars", "Index")" asp-controller="Cars" asp-action="Index">Каталог</a></li>
+                    <li class="nav-item"><a class="@NavClass("Cars", "Categories")" asp-controller="Cars" asp-action="Categories">Категории</a></li>
+                    <li class="nav-item"><a class="@NavClass("Cars", "Brands")" asp-controller="Cars" asp-action="Brands">Марки</a></li>
+                    <li class="nav-item"><a class="@NavClass("Cart", "Index")" asp-controller="Cart" asp-action="Index">Корзина</a></li>
+                    <li class="nav-item"><a class="@NavClass("Orders", "My")" asp-controller="Orders" asp-action="My">Заказы</a></li>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <li class="nav-item"><a class="@NavClass("Admin")" asp-controller="Admin" asp-action="Index">Админ-панель</a></li>
+                    }
+                </ul>
+                <ul class="navbar-nav align-items-lg-center nav-tabs-modern nav-tabs-modern-auth">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <li class="nav-item"><a class="@NavClass("Account", "Profile")" asp-controller="Account" asp-action="Profile">Личный кабинет</a></li>
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-outline-light btn-sm ms-lg-2" type="submit">Выйти</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item"><a class="btn btn-primary ms-lg-2" asp-controller="Account" asp-action="Profile">Личный кабинет</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<main class="container py-4 py-lg-5 site-main">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @RenderBody()
+</main>
+
+<footer class="py-4 mt-4">
+    <div class="container d-flex flex-column flex-md-row justify-content-between gap-2 small">
+        <span>© @DateTime.UtcNow.Year AutoSalon Grida</span>
+        <span>Технологичный выбор авто — быстро и удобно.</span>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

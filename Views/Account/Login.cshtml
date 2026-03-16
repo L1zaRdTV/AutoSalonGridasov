@@ -1,0 +1,24 @@
+@model AutoSalonGrida.Models.ViewModels.LoginViewModel
+@{ ViewData["Title"] = "Вход"; }
+
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="auth-card rounded-4 p-4 p-lg-5">
+            <div class="auth-switch">
+                <a class="auth-switch-link active" asp-action="Login">Вход</a>
+                <a class="auth-switch-link" asp-action="Register">Регистрация</a>
+            </div>
+            <h1 class="h3 mb-2 center-safe">Добро пожаловать</h1>
+            <p class="text-muted center-safe mb-4">Войдите, чтобы управлять корзиной, заказами и профилем.</p>
+
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /></div>
+                <div class="mb-3"><label asp-for="Password" class="form-label"></label><input asp-for="Password" class="form-control" /></div>
+                <div class="form-check mb-4"><input asp-for="RememberMe" class="form-check-input" /><label asp-for="RememberMe" class="form-check-label"></label></div>
+                <button class="btn btn-primary w-100" type="submit">Войти в аккаунт</button>
+            </form>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

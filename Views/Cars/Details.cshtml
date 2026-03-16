@@ -1,0 +1,87 @@
+@model AutoSalonGrida.Models.ViewModels.CarDetailsViewModel
+@{ ViewData["Title"] = $"{Model.Car.Brand} {Model.Car.Model}"; }
+
+@{
+    string ResolveImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return Url.Content("~/images/cars/default-car.svg");
+        if (path.Contains("/images/cars/", StringComparison.OrdinalIgnoreCase))
+        {
+            return path.StartsWith("~", StringComparison.Ordinal) ? Url.Content(path) : (path.StartsWith("/") ? path : Url.Content("~/" + path.TrimStart('/')));
+        }
+
+        return Url.Content("~/images/cars/default-car.svg");
+    }
+
+    var photos = Model.Gallery
+        .Select(i => ResolveImage(i.ImagePath))
+        .Prepend(ResolveImage(Model.Car.ImageUrl))
+        .Where(path => !string.IsNullOrWhiteSpace(path))
+        .Distinct()
+        .ToList();
+    var carouselId = $"details-carousel-{Model.Car.Id}";
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div id="@carouselId" class="carousel slide details-carousel mb-3" data-bs-ride="carousel">
+            <div class="carousel-inner rounded-4 overflow-hidden">
+                @for (var i = 0; i < photos.Count; i++)
+                {
+                    <div class="carousel-item @(i == 0 ? "active" : string.Empty)">
+                        <img src="@photos[i]" loading="lazy" class="img-fluid w-100 details-main-photo" alt="@Model.Car.Brand @Model.Car.Model иллюстрация @(i + 1)" />
+                    </div>
+                }
+            </div>
+
+            @if (photos.Count > 1)
+            {
+                <button class="carousel-control-prev" type="button" data-bs-target="#@carouselId" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                    <span class="visually-hidden">Предыдущее иллюстрация</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#@carouselId" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                    <span class="visually-hidden">Следующее иллюстрация</span>
+                </button>
+            }
+        </div>
+
+        @if (photos.Count > 1)
+        {
+            <div class="d-flex flex-wrap gap-2">
+                @for (var i = 0; i < photos.Count; i++)
+                {
+                    <button type="button"
+                            class="thumb-button"
+                            data-bs-target="#@carouselId"
+                            data-bs-slide-to="@i"
+                            aria-label="Открыть иллюстрация @(i + 1)">
+                        <img src="@photos[i]" loading="lazy" class="img-fluid rounded-3 detail-thumb" alt="@Model.Car.Brand @Model.Car.Model эскиз @(i + 1)" />
+                    </button>
+                }
+            </div>
+        }
+    </div>
+    <div class="col-lg-5">
+        <div class="glass-panel rounded-4 p-4 h-100">
+            <span class="stat-chip mb-3"><i class="fa-solid fa-shield-halved"></i> Проверенное предложение</span>
+            <h1>@Model.Car.Brand @Model.Car.Model</h1>
+            <p class="display-6 text-info fw-bold">@Model.Car.Price.ToString("N0") ₽</p>
+            <p class="text-muted">@Model.Car.Description</p>
+            <ul class="list-group mb-4">
+                <li class="list-group-item">Год: @Model.Car.Year</li>
+                <li class="list-group-item">Кузов: @Model.Car.BodyType</li>
+                <li class="list-group-item">Категория: @Model.Car.Category?.Name</li>
+                <li class="list-group-item">Тип двигателя: @Model.Car.EngineType</li>
+                <li class="list-group-item">Пробег: @Model.Car.Mileage км</li>
+                <li class="list-group-item">Популярность: @Model.Car.PopularityScore / 100</li>
+            </ul>
+            <form asp-controller="Cart" asp-action="Add" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="carId" value="@Model.Car.Id" />
+                <button class="btn btn-primary btn-lg w-100" type="submit">Добавить в корзину</button>
+            </form>
+        </div>
+    </div>
+</div>

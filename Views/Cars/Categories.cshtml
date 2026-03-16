@@ -1,0 +1,16 @@
+@model IEnumerable<AutoSalonGrida.Models.Category>
+@{ ViewData["Title"] = "Категории"; }
+
+<section class="brands-hero p-4 p-md-5 rounded-4 mb-4">
+    <h1 class="mb-2 center-safe">Категории автомобилей</h1>
+    <p class="mb-0 text-muted center-safe">Выберите тип кузова и откройте подходящие предложения.</p>
+</section>
+
+<div class="row g-3">
+@foreach (var item in Model)
+{
+    <div class="col-6 col-md-3">
+        <a class="category-tile rounded-3 p-4" asp-controller="Cars" asp-action="Index" asp-route-categoryId="@item.Id">@item.Name</a>
+    </div>
+}
+</div>

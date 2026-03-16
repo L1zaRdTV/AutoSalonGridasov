@@ -1,0 +1,84 @@
+@model IEnumerable<AutoSalonGrida.Models.Order>
+@{
+    ViewData["Title"] = "Заказы и сертификаты";
+    ViewData["AdminTab"] = "Orders";
+    var activeStatus = (ViewData["ActiveStatus"]?.ToString() ?? "all").ToLowerInvariant();
+
+    string FilterClass(string value) => activeStatus == value ? "btn btn-primary btn-sm" : "btn btn-outline-primary btn-sm";
+    string StatusBadgeClass(string status) => status switch
+    {
+        OrderStatuses.Approved => "badge bg-success",
+        OrderStatuses.Cancelled => "badge bg-danger",
+        _ => "badge text-bg-warning"
+    };
+}
+
+<h1 class="mb-3">Заказы и сертификаты</h1>
+<p class="text-muted">Здесь отображаются все покупки пользователей для подтверждения или отмены.</p>
+
+<partial name="_AdminTabs" />
+
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a asp-action="Orders" asp-route-status="all" class="@FilterClass("all")">Все</a>
+    <a asp-action="Orders" asp-route-status="pending" class="@FilterClass("pending")">На рассмотрении</a>
+    <a asp-action="Orders" asp-route-status="approved" class="@FilterClass("approved")">Подтвержденные</a>
+    <a asp-action="Orders" asp-route-status="cancelled" class="@FilterClass("cancelled")">Отмененные</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="admin-card rounded-4 p-4">
+        <p class="mb-0">Заказов по выбранному фильтру пока нет.</p>
+    </div>
+}
+else
+{
+    foreach (var order in Model)
+    {
+        <section class="certificate-card rounded-4 p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h2 class="h5 mb-0">Заказ №@order.Id</h2>
+                <span class="@StatusBadgeClass(order.Status)">@order.Status</span>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4"><strong>Покупатель:</strong> @(order.User?.FullName ?? "—")</div>
+                <div class="col-md-4"><strong>Email:</strong> @(order.User?.Email ?? "—")</div>
+                <div class="col-md-4"><strong>Телефон:</strong> @(string.IsNullOrWhiteSpace(order.User?.PhoneNumber) ? "Не указан" : order.User?.PhoneNumber)</div>
+                <div class="col-md-4"><strong>Дата:</strong> @order.OrderDate.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</div>
+                <div class="col-md-4"><strong>Сумма:</strong> @order.TotalPrice.ToString("N0") ₽</div>
+            </div>
+
+            <h3 class="h6">Состав заказа</h3>
+            <ul>
+                @foreach (var item in order.Items)
+                {
+                    <li>@item.Car?.Brand @item.Car?.Model — @item.Quantity × @item.UnitPrice.ToString("N0") ₽</li>
+                }
+            </ul>
+
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <form asp-action="UpdateOrderStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@order.Id" />
+                    <input type="hidden" name="status" value="@OrderStatuses.Approved" />
+                    <button class="btn btn-success btn-sm" type="submit">Подтвердить</button>
+                </form>
+
+                <form asp-action="UpdateOrderStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@order.Id" />
+                    <input type="hidden" name="status" value="@OrderStatuses.Cancelled" />
+                    <button class="btn btn-danger btn-sm" type="submit">Отменить</button>
+                </form>
+
+                <form asp-action="UpdateOrderStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@order.Id" />
+                    <input type="hidden" name="status" value="@OrderStatuses.Pending" />
+                    <button class="btn btn-outline-warning btn-sm" type="submit">Вернуть на рассмотрение</button>
+                </form>
+            </div>
+        </section>
+    }
+}

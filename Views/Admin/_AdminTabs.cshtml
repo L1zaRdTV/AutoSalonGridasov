@@ -1,0 +1,25 @@
+@{
+    var active = (ViewData["AdminTab"]?.ToString() ?? "Cars").ToLowerInvariant();
+
+    string TabClass(string tab) => active == tab.ToLowerInvariant()
+        ? "nav-link active"
+        : "nav-link";
+}
+
+<ul class="nav nav-pills admin-tabs mb-4 gap-2">
+    <li class="nav-item">
+        <a class="@TabClass("Cars")" asp-controller="Admin" asp-action="Index">
+            <i class="fa-solid fa-car-side me-1"></i> Автомобили
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="@TabClass("Categories")" asp-controller="Admin" asp-action="Categories">
+            <i class="fa-solid fa-layer-group me-1"></i> Категории
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="@TabClass("Orders")" asp-controller="Admin" asp-action="Orders">
+            <i class="fa-solid fa-file-signature me-1"></i> Заказы
+        </a>
+    </li>
+</ul>

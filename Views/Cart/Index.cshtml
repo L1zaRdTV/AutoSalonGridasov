@@ -1,0 +1,75 @@
+@model AutoSalonGrida.Models.ViewModels.CartViewModel
+@{
+    ViewData["Title"] = "Корзина";
+    string ResolveImage(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return Url.Content("~/images/cars/default-car.svg");
+        if (!path.Contains("/images/cars/", StringComparison.OrdinalIgnoreCase)) return Url.Content("~/images/cars/default-car.svg");
+        return path.StartsWith("~", StringComparison.Ordinal) ? Url.Content(path) : path;
+    }
+}
+
+<section class="d-flex justify-content-between align-items-center mb-4 gap-2 flex-wrap">
+    <div>
+        <h1 class="mb-1">Корзина</h1>
+        <p class="text-muted mb-0">Проверьте состав заказа и оформите покупку в один шаг.</p>
+    </div>
+    <span class="stat-chip"><i class="fa-solid fa-cart-shopping"></i> Позиций: @Model.Items.Count</span>
+</section>
+
+@if (!Model.Items.Any())
+{
+    <div class="glass-panel rounded-4 p-4 center-safe">
+        <h2 class="h4 mb-2">Корзина пока пуста</h2>
+        <p class="text-muted mb-3">Добавьте автомобиль из каталога, чтобы продолжить оформление.</p>
+        <a class="btn btn-primary" asp-controller="Cars" asp-action="Index">Перейти в каталог</a>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-lg-8">
+            @foreach (var item in Model.Items)
+            {
+                <article class="cart-item-card rounded-4 p-3 p-md-4 mb-3">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4">
+                            <img src="@ResolveImage(item.Car?.ImageUrl)" class="car-cover rounded-3" alt="@item.Car?.Brand @item.Car?.Model иллюстрация" />
+                        </div>
+                        <div class="col-md-8">
+                            <h2 class="h5 mb-2">@item.Car?.Brand @item.Car?.Model</h2>
+                            <p class="text-muted mb-2">Цена за автомобиль: @item.Car?.Price.ToString("N0") ₽</p>
+                            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                                <form asp-action="UpdateQuantity" method="post" class="d-flex gap-2 align-items-center">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="itemId" value="@item.Id" />
+                                    <label class="small text-muted">Количество</label>
+                                    <input type="number" name="quantity" value="@item.Quantity" min="1" class="form-control" style="max-width:90px" />
+                                    <button class="btn btn-outline-primary" type="submit">Обновить</button>
+                                </form>
+                                <form asp-action="Remove" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="itemId" value="@item.Id" />
+                                    <button class="btn btn-outline-danger" type="submit">Удалить</button>
+                                </form>
+                            </div>
+                            <p class="fw-semibold mt-3 mb-0">Сумма: @(((item.Car?.Price ?? 0) * item.Quantity).ToString("N0")) ₽</p>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+
+        <aside class="col-lg-4">
+            <div class="summary-card rounded-4 p-4">
+                <h2 class="h5 mb-3">Итоги заказа</h2>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Товаров</span><span>@Model.Items.Sum(i => i.Quantity)</span></div>
+                <div class="d-flex justify-content-between mb-3"><span class="text-muted">К оплате</span><span class="fs-5 fw-bold text-info">@Model.TotalPrice.ToString("N0") ₽</span></div>
+                <form asp-action="Checkout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button class="btn btn-primary btn-lg w-100" type="submit">Оформить заказ</button>
+                </form>
+            </div>
+        </aside>
+    </div>
+}

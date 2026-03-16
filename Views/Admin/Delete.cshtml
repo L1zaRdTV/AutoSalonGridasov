@@ -1,0 +1,9 @@
+@model AutoSalonGrida.Models.Car
+@{ ViewData["Title"] = "Удаление"; }
+<h1>Удалить автомобиль</h1>
+<p>Вы действительно хотите удалить @Model.Brand @Model.Model?</p>
+<form method="post">
+    @Html.AntiForgeryToken()
+    <button class="btn btn-danger" type="submit">Удалить</button>
+    <a asp-action="Index" class="btn btn-outline-secondary">Отмена</a>
+</form>

@@ -48,6 +48,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
         ViewData["ReturnUrl"] = returnUrl;
+        ValidateLoginModel(model);
 
         if (!ModelState.IsValid)
         {
@@ -72,6 +73,8 @@ public class AccountController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
+        ValidateRegisterModel(model);
+
         if (model.Role != "Администратор")
         {
             model.AdminPassword = null;
@@ -248,6 +251,108 @@ public class AccountController : Controller
         }
 
         return "Произошла ошибка при обработке запроса. Проверьте введённые данные.";
+    }
+
+    private void ValidateLoginModel(LoginViewModel model)
+    {
+        ValidateEmail(model.Email, nameof(model.Email), trimValue => model.Email = trimValue);
+        ValidatePassword(model.Password, nameof(model.Password));
+    }
+
+    private void ValidateEmail(string email, string fieldName, Action<string> setValue)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            ModelState.AddModelError(fieldName, "Введите адрес электронной почты.");
+            return;
+        }
+
+        var trimmedEmail = email.Trim();
+        setValue(trimmedEmail);
+
+        if (trimmedEmail.Length > 254)
+        {
+            ModelState.AddModelError(fieldName, "Email не должен превышать 254 символа.");
+        }
+        else if (!Regex.IsMatch(trimmedEmail, @"^[^\s@]+@[^\s@]+\.[^\s@]+$"))
+        {
+            ModelState.AddModelError(fieldName, "Введите корректный адрес электронной почты.");
+        }
+    }
+
+    private void ValidatePassword(string password, string fieldName)
+    {
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            ModelState.AddModelError(fieldName, "Введите пароль.");
+        }
+        else if (password.Length < 6 || password.Length > 100)
+        {
+            ModelState.AddModelError(fieldName, "Пароль должен содержать от 6 до 100 символов.");
+        }
+    }
+
+    private void ValidateRegisterModel(RegisterViewModel model)
+    {
+        if (string.IsNullOrWhiteSpace(model.FullName))
+        {
+            ModelState.AddModelError(nameof(model.FullName), "Введите ФИО.");
+        }
+        else
+        {
+            model.FullName = model.FullName.Trim();
+            if (model.FullName.Length > 100)
+            {
+                ModelState.AddModelError(nameof(model.FullName), "ФИО не должно превышать 100 символов.");
+            }
+            else if (!Regex.IsMatch(model.FullName, @"^[\p{L}\s\-']+$"))
+            {
+                ModelState.AddModelError(nameof(model.FullName), "ФИО содержит недопустимый символ. Разрешены только буквы, пробел, дефис и апостроф.");
+            }
+        }
+
+        ValidateEmail(model.Email, nameof(model.Email), trimValue => model.Email = trimValue);
+        ValidatePassword(model.Password, nameof(model.Password));
+
+        if (string.IsNullOrWhiteSpace(model.PhoneNumber))
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "Введите номер телефона.");
+        }
+        else
+        {
+            model.PhoneNumber = model.PhoneNumber.Trim();
+            if (model.PhoneNumber.Length is < 11 or > 12)
+            {
+                ModelState.AddModelError(nameof(model.PhoneNumber), "Телефон должен содержать от 11 до 12 символов.");
+            }
+            else if (!Regex.IsMatch(model.PhoneNumber, @"^(\+7|8)\d{10}$"))
+            {
+                ModelState.AddModelError(nameof(model.PhoneNumber), "Телефон должен быть в формате +79991234567 или 89991234567.");
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(model.ConfirmPassword))
+        {
+            ModelState.AddModelError(nameof(model.ConfirmPassword), "Подтвердите пароль.");
+        }
+        else if (model.ConfirmPassword.Length < 6 || model.ConfirmPassword.Length > 100)
+        {
+            ModelState.AddModelError(nameof(model.ConfirmPassword), "Подтверждение пароля должно содержать от 6 до 100 символов.");
+        }
+        else if (!string.Equals(model.Password, model.ConfirmPassword, StringComparison.Ordinal))
+        {
+            ModelState.AddModelError(nameof(model.ConfirmPassword), "Пароли не совпадают.");
+        }
+
+        if (model.Role != "Пользователь" && model.Role != "Администратор")
+        {
+            ModelState.AddModelError(nameof(model.Role), "Некорректное значение роли.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.AdminPassword) && !Regex.IsMatch(model.AdminPassword, @"^\d{4}$"))
+        {
+            ModelState.AddModelError(nameof(model.AdminPassword), "Код администратора должен содержать только цифры.");
+        }
     }
 
     private IActionResult RedirectToLocal(string? returnUrl)

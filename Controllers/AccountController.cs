@@ -286,9 +286,9 @@ public class AccountController : Controller
         {
             ModelState.AddModelError(fieldName, "Введите пароль.");
         }
-        else if (password.Length < 6 || password.Length > 100)
+        else if (password.Length < 15 || password.Length > 20)
         {
-            ModelState.AddModelError(fieldName, "Пароль должен содержать от 6 до 100 символов.");
+            ModelState.AddModelError(fieldName, "Пароль должен содержать от 15 до 20 символов.");
         }
     }
 
@@ -301,13 +301,13 @@ public class AccountController : Controller
         else
         {
             model.FullName = model.FullName.Trim();
-            if (model.FullName.Length > 100)
+            if (model.FullName.Length > 25)
             {
-                ModelState.AddModelError(nameof(model.FullName), "ФИО не должно превышать 100 символов.");
+                ModelState.AddModelError(nameof(model.FullName), "ФИО не должно превышать 25 символов.");
             }
             else if (!Regex.IsMatch(model.FullName, @"^[\p{L}\s\-']+$"))
             {
-                ModelState.AddModelError(nameof(model.FullName), "ФИО содержит недопустимый символ. Разрешены только буквы, пробел, дефис и апостроф.");
+                ModelState.AddModelError(nameof(model.FullName), "ФИО содержит недопустимые символы. Разрешены только буквы, пробел, дефис и апостроф.");
             }
         }
 
@@ -327,7 +327,7 @@ public class AccountController : Controller
             }
             else if (!Regex.IsMatch(model.PhoneNumber, @"^(\+7|8)\d{10}$"))
             {
-                ModelState.AddModelError(nameof(model.PhoneNumber), "Телефон должен быть в формате +79991234567 или 89991234567.");
+                ModelState.AddModelError(nameof(model.PhoneNumber), "Неправильный формат телефона. Используйте +79991234567 или 89991234567.");
             }
         }
 
@@ -335,9 +335,9 @@ public class AccountController : Controller
         {
             ModelState.AddModelError(nameof(model.ConfirmPassword), "Подтвердите пароль.");
         }
-        else if (model.ConfirmPassword.Length < 6 || model.ConfirmPassword.Length > 100)
+        else if (model.ConfirmPassword.Length < 15 || model.ConfirmPassword.Length > 20)
         {
-            ModelState.AddModelError(nameof(model.ConfirmPassword), "Подтверждение пароля должно содержать от 6 до 100 символов.");
+            ModelState.AddModelError(nameof(model.ConfirmPassword), "Подтверждение пароля должно содержать от 15 до 20 символов.");
         }
         else if (!string.Equals(model.Password, model.ConfirmPassword, StringComparison.Ordinal))
         {

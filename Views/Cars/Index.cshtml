@@ -56,24 +56,24 @@
         </div>
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Цена от</label>
-            <input name="minPrice" type="number" class="form-control" placeholder="₽" value="@Model.MinPrice" />
+            <input name="minPrice" type="number" class="form-control" placeholder="₽" value="@Model.MinPrice" min="0" step="1" />
         </div>
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Цена до</label>
-            <input name="maxPrice" type="number" class="form-control" placeholder="₽" value="@Model.MaxPrice" />
+            <input name="maxPrice" type="number" class="form-control" placeholder="₽" value="@Model.MaxPrice" min="0" step="1" />
         </div>
 
         <div class="col-6 col-lg-2">
-            <label class="form-label small text-muted mb-1">Год от</label>
-            <input name="minProductionDate" type="text" class="form-control" placeholder="00.00.0000" value="@Model.MinProductionDate" maxlength="10" pattern="^\d{2}\.\d{2}\.\d{4}$" />
+            <label class="form-label small text-muted mb-1">Дата выпуска от</label>
+            <input name="minProductionDate" type="date" class="form-control" value="@Model.MinProductionDate" min="1990-01-01" max="2100-12-31" onkeydown="return false" onpaste="return false" />
         </div>
         <div class="col-6 col-lg-2">
-            <label class="form-label small text-muted mb-1">Год до</label>
-            <input name="maxProductionDate" type="text" class="form-control" placeholder="00.00.0000" value="@Model.MaxProductionDate" maxlength="10" pattern="^\d{2}\.\d{2}\.\d{4}$" />
+            <label class="form-label small text-muted mb-1">Дата выпуска до</label>
+            <input name="maxProductionDate" type="date" class="form-control" value="@Model.MaxProductionDate" min="1990-01-01" max="2100-12-31" onkeydown="return false" onpaste="return false" />
         </div>
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Пробег до</label>
-            <input name="maxMileage" type="number" class="form-control" placeholder="км" value="@Model.MaxMileage" />
+            <input name="maxMileage" type="number" class="form-control" placeholder="км" value="@Model.MaxMileage" min="0" step="1" />
         </div>
         <div class="col-6 col-lg-2">
             <label class="form-label small text-muted mb-1">Двигатель</label>

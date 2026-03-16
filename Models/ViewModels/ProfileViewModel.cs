@@ -6,7 +6,7 @@ namespace AutoSalonGrida.Models.ViewModels;
 public class ProfileViewModel
 {
     [Required(ErrorMessage = "Введите ФИО.")]
-    [StringLength(100, ErrorMessage = "ФИО не должно превышать 100 символов.")]
+    [StringLength(25, ErrorMessage = "ФИО не должно превышать 25 символов.")]
     [RegularExpression(@"^[\p{L}\s\-']+$", ErrorMessage = "ФИО содержит недопустимый символ. Разрешены только буквы, пробел, дефис и апостроф.")]
     [Display(Name = "ФИО")]
     public string FullName { get; set; } = string.Empty;

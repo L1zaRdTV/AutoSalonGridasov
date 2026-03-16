@@ -46,6 +46,11 @@ public class CarsController : Controller
 
         var filterErrors = new List<string>();
 
+        ValidateNonNegativeFilter(ref minPrice, "Цена от", filterErrors);
+        ValidateNonNegativeFilter(ref maxPrice, "Цена до", filterErrors);
+        ValidateNonNegativeFilter(ref minMileage, "Пробег от", filterErrors);
+        ValidateNonNegativeFilter(ref maxMileage, "Пробег до", filterErrors);
+
         if (!string.IsNullOrWhiteSpace(minProductionDate))
         {
             if (TryParseProductionDate(minProductionDate, out var parsedMinDate))
@@ -54,7 +59,7 @@ public class CarsController : Controller
             }
             else
             {
-                filterErrors.Add($"Поле 'Год от' содержит некорректное значение '{minProductionDate}'. Используйте формат 00.00.0000.");
+                filterErrors.Add($"Поле 'Дата выпуска от' содержит некорректное значение '{minProductionDate}'. Выберите дату из календаря.");
             }
         }
 
@@ -66,7 +71,7 @@ public class CarsController : Controller
             }
             else
             {
-                filterErrors.Add($"Поле 'Год до' содержит некорректное значение '{maxProductionDate}'. Используйте формат 00.00.0000.");
+                filterErrors.Add($"Поле 'Дата выпуска до' содержит некорректное значение '{maxProductionDate}'. Выберите дату из календаря.");
             }
         }
 
@@ -181,9 +186,27 @@ public class CarsController : Controller
     {
         return DateTime.TryParseExact(
             value,
-            "dd.MM.yyyy",
+            ["yyyy-MM-dd", "dd.MM.yyyy"],
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out parsedDate);
+    }
+
+    private static void ValidateNonNegativeFilter(ref decimal? value, string fieldName, ICollection<string> errors)
+    {
+        if (value.HasValue && value.Value < 0)
+        {
+            errors.Add($"Поле '{fieldName}' не может быть отрицательным.");
+            value = null;
+        }
+    }
+
+    private static void ValidateNonNegativeFilter(ref int? value, string fieldName, ICollection<string> errors)
+    {
+        if (value.HasValue && value.Value < 0)
+        {
+            errors.Add($"Поле '{fieldName}' не может быть отрицательным.");
+            value = null;
+        }
     }
 }

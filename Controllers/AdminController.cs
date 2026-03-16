@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace AutoSalonGrida.Controllers;
 
@@ -39,6 +40,15 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CarFormViewModel model)
     {
+        if (!TryParseProductionDate(model.ProductionDate, out var parsedProductionDate))
+        {
+            ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска должна быть в формате 00.00.0000.");
+        }
+        else
+        {
+            model.Year = parsedProductionDate.Year;
+        }
+
         if (!ModelState.IsValid)
         {
             model.CategoryOptions = await CategoryOptionsAsync();
@@ -86,6 +96,15 @@ public class AdminController : Controller
     public async Task<IActionResult> Edit(int id, CarFormViewModel model)
     {
         if (id != model.Id) return NotFound();
+
+        if (!TryParseProductionDate(model.ProductionDate, out var parsedProductionDate))
+        {
+            ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска должна быть в формате 00.00.0000.");
+        }
+        else
+        {
+            model.Year = parsedProductionDate.Year;
+        }
 
         if (!ModelState.IsValid)
         {
@@ -191,11 +210,33 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AddCategory(string name)
     {
-        if (!string.IsNullOrWhiteSpace(name) && !await _context.Categories.AnyAsync(c => c.Name == name))
+        var normalizedName = name?.Trim();
+        if (string.IsNullOrWhiteSpace(normalizedName))
         {
-            _context.Categories.Add(new Category { Name = name });
-            await _context.SaveChangesAsync();
+            TempData["Success"] = "Введите название категории.";
+            return RedirectToAction(nameof(Categories));
         }
+
+        if (normalizedName.Length > 40)
+        {
+            TempData["Success"] = "Название категории не должно превышать 40 символов.";
+            return RedirectToAction(nameof(Categories));
+        }
+
+        if (await _context.Categories.AnyAsync(c => c.Name == normalizedName))
+        {
+            TempData["Success"] = "Категория с таким названием уже существует.";
+            return RedirectToAction(nameof(Categories));
+        }
+
+        if (!normalizedName.All(ch => char.IsLetterOrDigit(ch) || char.IsWhiteSpace(ch) || ch == '-'))
+        {
+            TempData["Success"] = "Название категории содержит недопустимый символ.";
+            return RedirectToAction(nameof(Categories));
+        }
+
+        _context.Categories.Add(new Category { Name = normalizedName });
+        await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Categories));
     }
@@ -234,6 +275,7 @@ public class AdminController : Controller
             Brand = car?.Brand ?? string.Empty,
             Model = car?.Model ?? string.Empty,
             Year = car?.Year ?? DateTime.UtcNow.Year,
+            ProductionDate = $"01.01.{car?.Year ?? DateTime.UtcNow.Year}",
             Price = car?.Price ?? 0,
             CategoryId = car?.CategoryId ?? 1,
             BodyType = car?.BodyType ?? "SUV",
@@ -309,5 +351,15 @@ public class AdminController : Controller
                 _context.CarImages.Add(new CarImage { CarId = carId, ImagePath = path });
             }
         }
+    }
+
+    private static bool TryParseProductionDate(string? dateValue, out DateTime parsedDate)
+    {
+        return DateTime.TryParseExact(
+            dateValue,
+            "dd.MM.yyyy",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out parsedDate);
     }
 }

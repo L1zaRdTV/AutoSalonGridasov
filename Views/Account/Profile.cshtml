@@ -35,15 +35,18 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label asp-for="FullName" class="form-label"></label>
-                            <input asp-for="FullName" class="form-control" />
+                            <input asp-for="FullName" class="form-control" maxlength="100" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" />
+                            <input asp-for="Email" class="form-control" maxlength="254" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="PhoneNumber" class="form-label"></label>
-                            <input asp-for="PhoneNumber" class="form-control" />
+                            <input asp-for="PhoneNumber" class="form-control" maxlength="12" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                         </div>
                         <div class="col-md-6">
                             <label asp-for="City" class="form-label"></label>
@@ -58,7 +61,8 @@
                         </div>
                         <div class="col-12">
                             <label asp-for="About" class="form-label"></label>
-                            <textarea asp-for="About" class="form-control" rows="4"></textarea>
+                            <textarea asp-for="About" class="form-control" rows="4" maxlength="1000"></textarea>
+                            <span asp-validation-for="About" class="text-danger"></span>
                         </div>
                         <div class="col-12">
                             <label asp-for="AvatarFile" class="form-label"></label>

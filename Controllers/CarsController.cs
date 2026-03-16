@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace AutoSalonGrida.Controllers;
 
@@ -29,6 +30,8 @@ public class CarsController : Controller
         decimal? maxPrice,
         int? minYear,
         int? maxYear,
+        string? minProductionDate,
+        string? maxProductionDate,
         int? minMileage,
         int? maxMileage,
         string? bodyType,
@@ -40,6 +43,32 @@ public class CarsController : Controller
             .Include(c => c.Category)
             .Include(c => c.Images)
             .AsQueryable();
+
+        var filterErrors = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(minProductionDate))
+        {
+            if (TryParseProductionDate(minProductionDate, out var parsedMinDate))
+            {
+                minYear = parsedMinDate.Year;
+            }
+            else
+            {
+                filterErrors.Add($"Поле 'Год от' содержит некорректное значение '{minProductionDate}'. Используйте формат 00.00.0000.");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(maxProductionDate))
+        {
+            if (TryParseProductionDate(maxProductionDate, out var parsedMaxDate))
+            {
+                maxYear = parsedMaxDate.Year;
+            }
+            else
+            {
+                filterErrors.Add($"Поле 'Год до' содержит некорректное значение '{maxProductionDate}'. Используйте формат 00.00.0000.");
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(c => c.Brand.Contains(search) || c.Model.Contains(search));
@@ -79,13 +108,16 @@ public class CarsController : Controller
             MaxPrice = maxPrice,
             MinYear = minYear,
             MaxYear = maxYear,
+            MinProductionDate = minProductionDate,
+            MaxProductionDate = maxProductionDate,
             MinMileage = minMileage,
             MaxMileage = maxMileage,
             BodyType = bodyType,
             EngineType = engineType,
             BodyTypes = bodyTypes.Select(t => new SelectListItem(t, t) { Selected = t == bodyType }).ToList(),
             EngineTypes = engineTypes.Select(t => new SelectListItem(t, t) { Selected = t == engineType }).ToList(),
-            Sort = sort
+            Sort = sort,
+            FilterErrors = filterErrors
         });
 
     }
@@ -144,4 +176,14 @@ public class CarsController : Controller
     public async Task<IActionResult> Categories() => View(await _context.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync());
 
     public async Task<IActionResult> Brands() => View(await _context.Cars.AsNoTracking().Select(c => c.Brand).Distinct().OrderBy(b => b).ToListAsync());
+
+    private static bool TryParseProductionDate(string value, out DateTime parsedDate)
+    {
+        return DateTime.TryParseExact(
+            value,
+            "dd.MM.yyyy",
+            CultureInfo.InvariantCulture,
+            DateTimeStyles.None,
+            out parsedDate);
+    }
 }

@@ -10,7 +10,7 @@
     }
     <h1 class="h3 mb-3">Управление категориями</h1>
     <form method="post" asp-action="AddCategory" class="d-flex gap-2 mb-3">
-        <input name="name" class="form-control" placeholder="Введите название категории" />
+        <input name="name" class="form-control" placeholder="Введите название категории" maxlength="40" pattern="^[A-Za-zА-Яа-яЁё0-9\s-]+$" title="Разрешены буквы, цифры, пробел и дефис." />
         <button class="btn btn-primary">Добавить</button>
     </form>
     <ul class="list-group">

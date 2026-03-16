@@ -72,6 +72,12 @@ public class AccountController : Controller
     [AllowAnonymous]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
+        if (model.Role != "Администратор")
+        {
+            model.AdminPassword = null;
+            ModelState.Remove(nameof(model.AdminPassword));
+        }
+
         if (model.Role == "Администратор" && model.AdminPassword != AdminRoleSecret)
         {
             ModelState.AddModelError(nameof(model.AdminPassword), "Неверный специальный код администратора.");

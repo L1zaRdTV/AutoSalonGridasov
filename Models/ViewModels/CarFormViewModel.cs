@@ -48,6 +48,14 @@ public class CarFormViewModel
 
     public IFormFile? MainImage { get; set; }
     public List<IFormFile>? GalleryImages { get; set; }
+    public List<int> RemoveImageIds { get; set; } = [];
+    public List<CarImageViewModel> ExistingGallery { get; set; } = [];
 
     public List<SelectListItem> CategoryOptions { get; set; } = [];
+}
+
+public class CarImageViewModel
+{
+    public int Id { get; set; }
+    public string ImagePath { get; set; } = string.Empty;
 }

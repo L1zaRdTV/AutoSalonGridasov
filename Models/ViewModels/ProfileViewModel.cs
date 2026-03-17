@@ -36,5 +36,19 @@ public class ProfileViewModel
     [Display(Name = "Новая аватарка")]
     public IFormFile? AvatarFile { get; set; }
 
+    [DataType(DataType.Password)]
+    [Display(Name = "Текущий пароль")]
+    public string? CurrentPassword { get; set; }
+
+    [DataType(DataType.Password)]
+    [Display(Name = "Новый пароль")]
+    [StringLength(20, MinimumLength = 15, ErrorMessage = "Новый пароль должен содержать от 15 до 20 символов.")]
+    public string? NewPassword { get; set; }
+
+    [DataType(DataType.Password)]
+    [Display(Name = "Подтверждение нового пароля")]
+    [Compare(nameof(NewPassword), ErrorMessage = "Подтверждение пароля не совпадает.")]
+    public string? ConfirmNewPassword { get; set; }
+
     public IList<string> Roles { get; set; } = new List<string>();
 }

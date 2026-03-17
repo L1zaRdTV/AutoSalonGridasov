@@ -67,6 +67,28 @@
                         <div class="col-12">
                             <label asp-for="AvatarFile" class="form-label"></label>
                             <input asp-for="AvatarFile" class="form-control" accept=".jpg,.jpeg,.png,.webp" />
+                            <span asp-validation-for="AvatarFile" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <hr />
+                            <h5 class="mb-0">Смена пароля</h5>
+                            <small class="text-muted">Оставьте поля пустыми, если не хотите менять пароль.</small>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="CurrentPassword" class="form-label"></label>
+                            <input asp-for="CurrentPassword" class="form-control" autocomplete="current-password" />
+                            <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="NewPassword" class="form-label"></label>
+                            <input asp-for="NewPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="ConfirmNewPassword" class="form-label"></label>
+                            <input asp-for="ConfirmNewPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmNewPassword" class="text-danger"></span>
                         </div>
                     </div>
                     <button class="btn btn-primary mt-4" type="submit">Сохранить изменения</button>

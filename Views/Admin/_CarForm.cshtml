@@ -1,6 +1,7 @@
 @model AutoSalonGrida.Models.ViewModels.CarFormViewModel
 <form method="post" enctype="multipart/form-data" class="admin-card rounded-4 p-4">
     @if (Model.Id.HasValue) { <input asp-for="Id" type="hidden" /> }
+    <input asp-for="ImageUrl" type="hidden" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="row g-3">
         <div class="col-md-4"><label asp-for="Brand" class="form-label">Марка</label><input asp-for="Brand" class="form-control" maxlength="60" /><span asp-validation-for="Brand" class="text-danger"></span></div>
@@ -12,8 +13,37 @@
         <div class="col-md-6"><label asp-for="EngineType" class="form-label">Двигатель</label><input asp-for="EngineType" class="form-control" maxlength="80" /><span asp-validation-for="EngineType" class="text-danger"></span></div>
         <div class="col-md-6"><label asp-for="Mileage" class="form-label">Пробег</label><input asp-for="Mileage" type="number" min="0" step="1" class="form-control" /><span asp-validation-for="Mileage" class="text-danger"></span></div>
         <div class="col-12"><label asp-for="Description" class="form-label">Описание</label><textarea asp-for="Description" class="form-control" rows="4" maxlength="2500"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
-        <div class="col-md-6"><label asp-for="MainImage" class="form-label">Главная иллюстрация</label><input asp-for="MainImage" class="form-control" type="file" /></div>
-        <div class="col-md-6"><label asp-for="GalleryImages" class="form-label">Галерея иллюстраций</label><input asp-for="GalleryImages" class="form-control" type="file" multiple /></div>
+        <div class="col-md-6"><label asp-for="MainImage" class="form-label">Главная иллюстрация</label><input asp-for="MainImage" class="form-control" type="file" accept=".jpg,.jpeg,.png,.webp" /><span asp-validation-for="MainImage" class="text-danger"></span></div>
+        <div class="col-md-6"><label asp-for="GalleryImages" class="form-label">Галерея иллюстраций</label><input asp-for="GalleryImages" class="form-control" type="file" multiple accept=".jpg,.jpeg,.png,.webp" /><span asp-validation-for="GalleryImages" class="text-danger"></span></div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+        {
+            <div class="col-12">
+                <label class="form-label">Текущее главное изображение</label>
+                <div>
+                    <img src="@Model.ImageUrl" class="img-thumbnail" style="max-height: 180px;" alt="Главное изображение" />
+                </div>
+            </div>
+        }
+
+        @if (Model.ExistingGallery.Count > 0)
+        {
+            <div class="col-12">
+                <label class="form-label d-block">Текущая галерея</label>
+                <div class="d-flex flex-wrap gap-3">
+                    @for (var i = 0; i < Model.ExistingGallery.Count; i++)
+                    {
+                        <div class="border rounded p-2">
+                            <img src="@Model.ExistingGallery[i].ImagePath" class="img-thumbnail d-block mb-2" style="width: 180px; height: 110px; object-fit: cover;" alt="Галерея @Model.ExistingGallery[i].Id" />
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="RemoveImageIds" value="@Model.ExistingGallery[i].Id" id="remove-@Model.ExistingGallery[i].Id" />
+                                <label class="form-check-label" for="remove-@Model.ExistingGallery[i].Id">Удалить</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
     </div>
     <div class="mt-3 d-flex gap-2">
         <button class="btn btn-primary" type="submit">Сохранить</button>

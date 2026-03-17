@@ -1,8 +1,12 @@
+using AutoSalonGrida.Data;
 using AutoSalonGrida.Models;
 using AutoSalonGrida.Models.ViewModels;
+using AutoSalonGrida.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 
@@ -11,27 +15,19 @@ namespace AutoSalonGrida.Controllers;
 public class AccountController : Controller
 {
     private const string AdminRoleSecret = "5890";
-    private const string CityClaimType = "profile:city";
-    private const string AboutClaimType = "profile:about";
-    private const string AvatarClaimType = "profile:avatar";
     private static readonly HashSet<string> AllowedAvatarExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".jpg",
-        ".jpeg",
-        ".png",
-        ".webp"
+        ".jpg", ".jpeg", ".png", ".webp"
     };
-    private readonly UserManager<ApplicationUser> _userManager;
-    private readonly SignInManager<ApplicationUser> _signInManager;
+
+    private readonly ApplicationDbContext _context;
+    private readonly IPasswordService _passwordService;
     private readonly IWebHostEnvironment _environment;
 
-    public AccountController(
-        UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        IWebHostEnvironment environment)
+    public AccountController(ApplicationDbContext context, IPasswordService passwordService, IWebHostEnvironment environment)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
+        _context = context;
+        _passwordService = passwordService;
         _environment = environment;
     }
 
@@ -49,20 +45,17 @@ public class AccountController : Controller
     {
         ViewData["ReturnUrl"] = returnUrl;
         ValidateLoginModel(model);
+        if (!ModelState.IsValid) return View(model);
 
-        if (!ModelState.IsValid)
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+        if (user is null || !_passwordService.VerifyPassword(model.Password, user.PasswordHash))
         {
+            ModelState.AddModelError(string.Empty, "Неверный email или пароль.");
             return View(model);
         }
 
-        var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
-        if (result.Succeeded)
-        {
-            return RedirectToLocal(returnUrl);
-        }
-
-        ModelState.AddModelError(string.Empty, "Неверный email или пароль.");
-        return View(model);
+        await SignInAsync(user, model.RememberMe);
+        return RedirectToLocal(returnUrl);
     }
 
     [AllowAnonymous]
@@ -86,60 +79,45 @@ public class AccountController : Controller
             ModelState.AddModelError(nameof(model.AdminPassword), "Неверный специальный код администратора.");
         }
 
-        if (!ModelState.IsValid)
+        if (await _context.Users.AnyAsync(u => u.Email == model.Email))
         {
-            return View(model);
+            ModelState.AddModelError(nameof(model.Email), "Этот email уже используется.");
         }
 
-        var user = new ApplicationUser
+        if (!ModelState.IsValid) return View(model);
+
+        var user = new User
         {
-            UserName = model.Email,
             Email = model.Email,
             FullName = model.FullName,
-            PhoneNumber = model.PhoneNumber
+            PhoneNumber = model.PhoneNumber,
+            Role = model.Role == "Администратор" ? "Admin" : "User",
+            PasswordHash = _passwordService.HashPassword(model.Password)
         };
 
-        var result = await _userManager.CreateAsync(user, model.Password);
-        if (result.Succeeded)
-        {
-            var role = model.Role == "Администратор" ? "Admin" : "User";
-            await _userManager.AddToRoleAsync(user, role);
-            await _signInManager.SignInAsync(user, isPersistent: false);
-            return RedirectToAction("Index", "Home");
-        }
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
 
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError(string.Empty, TranslateIdentityError(error));
-        }
-
-        return View(model);
+        await SignInAsync(user, false);
+        return RedirectToAction("Index", "Home");
     }
 
     [Authorize]
     public async Task<IActionResult> Profile()
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
-        {
-            return Challenge();
-        }
+        var user = await GetCurrentUserAsync();
+        if (user is null) return Challenge();
 
-        var roles = await _userManager.GetRolesAsync(user);
-        var claims = await _userManager.GetClaimsAsync(user);
-
-        var model = new ProfileViewModel
+        return View(new ProfileViewModel
         {
             FullName = user.FullName,
-            Email = user.Email ?? string.Empty,
+            Email = user.Email,
             PhoneNumber = user.PhoneNumber,
-            City = claims.FirstOrDefault(c => c.Type == CityClaimType)?.Value,
-            About = claims.FirstOrDefault(c => c.Type == AboutClaimType)?.Value,
-            AvatarUrl = claims.FirstOrDefault(c => c.Type == AvatarClaimType)?.Value ?? "/images/cars/default-car.svg",
-            Roles = roles
-        };
-
-        return View(model);
+            City = user.City,
+            About = user.About,
+            AvatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl) ? "/images/cars/default-car.svg" : user.AvatarUrl,
+            Roles = new List<string> { user.Role }
+        });
     }
 
     [Authorize]
@@ -147,29 +125,28 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Profile(ProfileViewModel model)
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
-        {
-            return Challenge();
-        }
+        var user = await GetCurrentUserAsync();
+        if (user is null) return Challenge();
 
-        var roles = await _userManager.GetRolesAsync(user);
-        model.Roles = roles;
+        model.Roles = new List<string> { user.Role };
 
         if (!string.IsNullOrWhiteSpace(model.City) && !ProfileCities.Russian.Contains(model.City))
         {
             ModelState.AddModelError(nameof(model.City), "Выберите город только из списка.");
         }
 
-        if (!ModelState.IsValid)
+        if (await _context.Users.AnyAsync(u => u.Email == model.Email && u.Id != user.Id))
         {
-            return View(model);
+            ModelState.AddModelError(nameof(model.Email), "Этот email уже используется.");
         }
+
+        if (!ModelState.IsValid) return View(model);
 
         user.FullName = model.FullName;
         user.Email = model.Email;
-        user.UserName = model.Email;
         user.PhoneNumber = model.PhoneNumber;
+        user.City = model.City;
+        user.About = model.About;
 
         if (model.AvatarFile is not null && model.AvatarFile.Length > 0)
         {
@@ -189,23 +166,11 @@ public class AccountController : Controller
             await using var stream = System.IO.File.Create(filePath);
             await model.AvatarFile.CopyToAsync(stream);
 
-            model.AvatarUrl = $"/images/avatars/{fileName}";
+            user.AvatarUrl = $"/images/avatars/{fileName}";
         }
 
-        var result = await _userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-        {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, TranslateIdentityError(error));
-            }
-
-            return View(model);
-        }
-
-        await SetUserClaimAsync(user, CityClaimType, model.City);
-        await SetUserClaimAsync(user, AboutClaimType, model.About);
-        await SetUserClaimAsync(user, AvatarClaimType, model.AvatarUrl);
+        await _context.SaveChangesAsync();
+        await SignInAsync(user, true);
 
         TempData["ProfileMessage"] = "Профиль успешно обновлён.";
         return RedirectToAction(nameof(Profile));
@@ -216,41 +181,36 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        await _signInManager.SignOutAsync();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
     }
 
     public IActionResult AccessDenied() => View();
 
-    private static string TranslateIdentityError(IdentityError error)
+    private async Task<User?> GetCurrentUserAsync()
     {
-        return error.Code switch
-        {
-            "DuplicateUserName" => "Пользователь с таким email уже существует.",
-            "DuplicateEmail" => "Этот email уже используется.",
-            "InvalidEmail" => "Некорректный формат email.",
-            "PasswordTooShort" => "Пароль слишком короткий.",
-            "PasswordRequiresNonAlphanumeric" => "Пароль должен содержать хотя бы один спецсимвол.",
-            "PasswordRequiresDigit" => "Пароль должен содержать хотя бы одну цифру.",
-            "PasswordRequiresLower" => "Пароль должен содержать хотя бы одну строчную букву.",
-            "PasswordRequiresUpper" => "Пароль должен содержать хотя бы одну заглавную букву.",
-            _ => NormalizeIdentityDescription(error.Description)
-        };
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId)) return null;
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
     }
 
-    private static string NormalizeIdentityDescription(string description)
+    private async Task SignInAsync(User user, bool isPersistent)
     {
-        if (string.IsNullOrWhiteSpace(description))
+        var claims = new List<Claim>
         {
-            return "Произошла ошибка при обработке запроса.";
-        }
+            new(ClaimTypes.NameIdentifier, user.Id),
+            new(ClaimTypes.Name, user.FullName),
+            new(ClaimTypes.Email, user.Email),
+            new(ClaimTypes.Role, user.Role)
+        };
 
-        if (Regex.IsMatch(description, @"^[\u0400-\u04FF\s\p{P}\d]+$"))
-        {
-            return description;
-        }
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
 
-        return "Произошла ошибка при обработке запроса. Проверьте введённые данные.";
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties { IsPersistent = isPersistent });
     }
 
     private void ValidateLoginModel(LoginViewModel model)
@@ -335,10 +295,6 @@ public class AccountController : Controller
         {
             ModelState.AddModelError(nameof(model.ConfirmPassword), "Подтвердите пароль.");
         }
-        else if (model.ConfirmPassword.Length < 15 || model.ConfirmPassword.Length > 20)
-        {
-            ModelState.AddModelError(nameof(model.ConfirmPassword), "Подтверждение пароля должно содержать от 15 до 20 символов.");
-        }
         else if (!string.Equals(model.Password, model.ConfirmPassword, StringComparison.Ordinal))
         {
             ModelState.AddModelError(nameof(model.ConfirmPassword), "Пароли не совпадают.");
@@ -363,31 +319,5 @@ public class AccountController : Controller
         }
 
         return RedirectToAction("Index", "Home");
-    }
-
-    private async Task SetUserClaimAsync(ApplicationUser user, string claimType, string? value)
-    {
-        var claims = await _userManager.GetClaimsAsync(user);
-        var existingClaim = claims.FirstOrDefault(c => c.Type == claimType);
-
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            if (existingClaim is not null)
-            {
-                await _userManager.RemoveClaimAsync(user, existingClaim);
-            }
-
-            return;
-        }
-
-        var newClaim = new Claim(claimType, value);
-        if (existingClaim is null)
-        {
-            await _userManager.AddClaimAsync(user, newClaim);
-        }
-        else
-        {
-            await _userManager.ReplaceClaimAsync(user, existingClaim, newClaim);
-        }
     }
 }

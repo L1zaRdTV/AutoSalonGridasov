@@ -1,15 +1,15 @@
 using AutoSalonGrida.Models;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutoSalonGrida.Data;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext : DbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
     }
 
+    public DbSet<User> Users => Set<User>();
     public DbSet<Car> Cars => Set<Car>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<CarImage> CarImages => Set<CarImage>();
@@ -20,7 +20,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(builder);
+        builder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
 
         builder.Entity<Car>()
             .HasOne(c => c.Category)

@@ -1,6 +1,5 @@
 using AutoSalonGrida.Models;
 using AutoSalonGrida.Services;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace AutoSalonGrida.Data;
@@ -9,37 +8,24 @@ public static class SeedData
 {
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {
-        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-
-        foreach (var role in new[] { "Администратор", "Пользователь", "Admin", "User" })
-        {
-            if (!await roleManager.RoleExistsAsync(role))
-            {
-                await roleManager.CreateAsync(new IdentityRole(role));
-            }
-        }
+        var passwordService = serviceProvider.GetRequiredService<IPasswordService>();
 
         const string adminEmail = "admin@autosalon.local";
         const string adminPassword = "Admin123!";
 
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        var adminUser = await context.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
         if (adminUser is null)
         {
-            adminUser = new ApplicationUser
+            context.Users.Add(new User
             {
-                UserName = adminEmail,
                 Email = adminEmail,
                 FullName = "Главный администратор",
-                EmailConfirmed = true
-            };
+                Role = "Admin",
+                PasswordHash = passwordService.HashPassword(adminPassword)
+            });
 
-            var createResult = await userManager.CreateAsync(adminUser, adminPassword);
-            if (createResult.Succeeded)
-            {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
-            }
+            await context.SaveChangesAsync();
         }
 
         if (!await context.Cars.AnyAsync())

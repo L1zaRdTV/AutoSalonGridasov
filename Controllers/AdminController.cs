@@ -14,6 +14,10 @@ namespace AutoSalonGrida.Controllers;
 public class AdminController : Controller
 {
     private const int MinGalleryImagesCount = 3;
+    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".webp"
+    };
     private readonly ApplicationDbContext _context;
     private readonly IWebHostEnvironment _environment;
     private readonly ICarPhotoService _carPhotoService;
@@ -40,6 +44,8 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CarFormViewModel model)
     {
+        ValidateImageFiles(model);
+
         if (!TryParseProductionDate(model.ProductionDate, out var parsedProductionDate))
         {
             ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска указана неверно. Выберите дату из календаря.");
@@ -97,6 +103,8 @@ public class AdminController : Controller
     {
         if (id != model.Id) return NotFound();
 
+        ValidateImageFiles(model);
+
         if (!TryParseProductionDate(model.ProductionDate, out var parsedProductionDate))
         {
             ModelState.AddModelError(nameof(model.ProductionDate), "Дата выпуска указана неверно. Выберите дату из календаря.");
@@ -128,6 +136,15 @@ public class AdminController : Controller
         var mainImage = await SaveImageAsync(model.MainImage);
         var modelPhotos = await _carPhotoService.GetPhotosAsync(model.Brand, model.Model, 4);
         car.ImageUrl = mainImage ?? model.ImageUrl ?? car.ImageUrl ?? modelPhotos[0];
+
+        if (model.RemoveImageIds is { Count: > 0 })
+        {
+            var imagesToDelete = await _context.CarImages
+                .Where(i => i.CarId == car.Id && model.RemoveImageIds.Contains(i.Id))
+                .ToListAsync();
+
+            _context.CarImages.RemoveRange(imagesToDelete);
+        }
 
         await SaveGalleryImagesAsync(car.Id, model.GalleryImages);
         await EnsureGalleryForCarAsync(car, modelPhotos);
@@ -283,6 +300,13 @@ public class AdminController : Controller
             Mileage = car?.Mileage ?? 0,
             EngineType = car?.EngineType ?? string.Empty,
             ImageUrl = car?.ImageUrl,
+            ExistingGallery = car is null
+                ? []
+                : await _context.CarImages
+                    .Where(i => i.CarId == car.Id)
+                    .OrderBy(i => i.Id)
+                    .Select(i => new CarImageViewModel { Id = i.Id, ImagePath = i.ImagePath })
+                    .ToListAsync(),
             CategoryOptions = await CategoryOptionsAsync()
         };
     }
@@ -361,5 +385,34 @@ public class AdminController : Controller
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out parsedDate);
+    }
+
+    private void ValidateImageFiles(CarFormViewModel model)
+    {
+        ValidateFile(model.MainImage, nameof(model.MainImage));
+
+        if (model.GalleryImages is null)
+        {
+            return;
+        }
+
+        for (var i = 0; i < model.GalleryImages.Count; i++)
+        {
+            ValidateFile(model.GalleryImages[i], $"{nameof(model.GalleryImages)}[{i}]");
+        }
+    }
+
+    private void ValidateFile(IFormFile? file, string fieldName)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return;
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (!AllowedImageExtensions.Contains(extension))
+        {
+            ModelState.AddModelError(fieldName, "Поддерживаются только JPG, PNG и WEBP изображения.");
+        }
     }
 }

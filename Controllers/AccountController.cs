@@ -129,6 +129,11 @@ public class AccountController : Controller
         if (user is null) return Challenge();
 
         model.Roles = new List<string> { user.Role };
+        model.FullName = model.FullName?.Trim() ?? string.Empty;
+        model.Email = model.Email?.Trim() ?? string.Empty;
+        model.PhoneNumber = model.PhoneNumber?.Trim();
+        model.City = model.City?.Trim();
+        model.About = model.About?.Trim();
 
         if (!string.IsNullOrWhiteSpace(model.City) && !ProfileCities.Russian.Contains(model.City))
         {
@@ -138,6 +143,41 @@ public class AccountController : Controller
         if (await _context.Users.AnyAsync(u => u.Email == model.Email && u.Id != user.Id))
         {
             ModelState.AddModelError(nameof(model.Email), "Этот email уже используется.");
+        }
+
+        var passwordChangeRequested =
+            !string.IsNullOrWhiteSpace(model.CurrentPassword) ||
+            !string.IsNullOrWhiteSpace(model.NewPassword) ||
+            !string.IsNullOrWhiteSpace(model.ConfirmNewPassword);
+
+        if (passwordChangeRequested)
+        {
+            if (string.IsNullOrWhiteSpace(model.CurrentPassword))
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), "Введите текущий пароль.");
+            }
+            else if (!_passwordService.VerifyPassword(model.CurrentPassword, user.PasswordHash))
+            {
+                ModelState.AddModelError(nameof(model.CurrentPassword), "Текущий пароль введён неверно.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.NewPassword))
+            {
+                ModelState.AddModelError(nameof(model.NewPassword), "Введите новый пароль.");
+            }
+            else if (model.NewPassword.Length < 15 || model.NewPassword.Length > 20)
+            {
+                ModelState.AddModelError(nameof(model.NewPassword), "Новый пароль должен содержать от 15 до 20 символов.");
+            }
+            else if (string.Equals(model.NewPassword, model.CurrentPassword, StringComparison.Ordinal))
+            {
+                ModelState.AddModelError(nameof(model.NewPassword), "Новый пароль должен отличаться от текущего.");
+            }
+
+            if (!string.Equals(model.NewPassword, model.ConfirmNewPassword, StringComparison.Ordinal))
+            {
+                ModelState.AddModelError(nameof(model.ConfirmNewPassword), "Подтверждение пароля не совпадает.");
+            }
         }
 
         if (!ModelState.IsValid) return View(model);
@@ -167,6 +207,11 @@ public class AccountController : Controller
             await model.AvatarFile.CopyToAsync(stream);
 
             user.AvatarUrl = $"/images/avatars/{fileName}";
+        }
+
+        if (passwordChangeRequested && !string.IsNullOrWhiteSpace(model.NewPassword))
+        {
+            user.PasswordHash = _passwordService.HashPassword(model.NewPassword);
         }
 
         await _context.SaveChangesAsync();

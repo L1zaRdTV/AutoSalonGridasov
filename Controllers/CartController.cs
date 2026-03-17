@@ -2,9 +2,9 @@ using AutoSalonGrida.Data;
 using AutoSalonGrida.Models;
 using AutoSalonGrida.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace AutoSalonGrida.Controllers;
 
@@ -12,12 +12,10 @@ namespace AutoSalonGrida.Controllers;
 public class CartController : Controller
 {
     private readonly ApplicationDbContext _context;
-    private readonly UserManager<ApplicationUser> _userManager;
 
-    public CartController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+    public CartController(ApplicationDbContext context)
     {
         _context = context;
-        _userManager = userManager;
     }
 
     public async Task<IActionResult> Index()
@@ -57,7 +55,7 @@ public class CartController : Controller
     public async Task<IActionResult> UpdateQuantity(int itemId, int quantity)
     {
         var item = await _context.CartItems.Include(i => i.Cart).FirstOrDefaultAsync(i => i.Id == itemId);
-        var userId = _userManager.GetUserId(User);
+        var userId = GetCurrentUserId();
         if (item is null || item.Cart?.UserId != userId) return NotFound();
 
         item.Quantity = Math.Max(1, quantity);
@@ -70,7 +68,7 @@ public class CartController : Controller
     public async Task<IActionResult> Remove(int itemId)
     {
         var item = await _context.CartItems.Include(i => i.Cart).FirstOrDefaultAsync(i => i.Id == itemId);
-        var userId = _userManager.GetUserId(User);
+        var userId = GetCurrentUserId();
         if (item is null || item.Cart?.UserId != userId) return NotFound();
 
         _context.CartItems.Remove(item);
@@ -120,11 +118,7 @@ public class CartController : Controller
 
     private async Task<Cart> GetOrCreateCartAsync()
     {
-        var userId = _userManager.GetUserId(User);
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            throw new InvalidOperationException("Authenticated user id is missing.");
-        }
+        var userId = GetCurrentUserId();
         var cart = await _context.Carts.FirstOrDefaultAsync(c => c.UserId == userId);
         if (cart is not null) return cart;
 
@@ -132,5 +126,16 @@ public class CartController : Controller
         _context.Carts.Add(cart);
         await _context.SaveChangesAsync();
         return cart;
+    }
+
+    private string GetCurrentUserId()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new InvalidOperationException("Authenticated user id is missing.");
+        }
+
+        return userId;
     }
 }

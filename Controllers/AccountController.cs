@@ -115,7 +115,7 @@ public class AccountController : Controller
             PhoneNumber = user.PhoneNumber,
             City = user.City,
             About = user.About,
-            AvatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl) ? "/images/cars/default-car.svg" : user.AvatarUrl,
+            AvatarUrl = string.IsNullOrWhiteSpace(user.AvatarUrl) ? "/assets/images/default-car.svg" : user.AvatarUrl,
             Roles = new List<string> { user.Role }
         });
     }

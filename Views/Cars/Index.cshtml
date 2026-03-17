@@ -6,17 +6,17 @@
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return Url.Content("~/images/cars/default-car.svg");
+            return Url.Content("~/assets/images/default-car.svg");
         }
 
-        if (path.Contains("/images/cars/", StringComparison.OrdinalIgnoreCase))
+        if (path.Contains("/assets/images/", StringComparison.OrdinalIgnoreCase))
         {
             return path.StartsWith("~", StringComparison.Ordinal)
                 ? Url.Content(path)
                 : (path.StartsWith("/") ? path : Url.Content("~/" + path.TrimStart('/')));
         }
 
-        return Url.Content("~/images/cars/default-car.svg");
+        return Url.Content("~/assets/images/default-car.svg");
     }
 }
 

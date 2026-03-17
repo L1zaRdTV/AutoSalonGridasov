@@ -16,7 +16,7 @@
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger validation-summary-errors"></div>
                 <div class="mb-3">
                     <label asp-for="FullName" class="form-label"></label>
-                    <input asp-for="FullName" class="form-control" autocomplete="name" maxlength="25" />
+                    <input asp-for="FullName" class="form-control" autocomplete="name" maxlength="25" minlength="2" pattern="^[A-Za-zА-Яа-яЁё\s\-']+$" />
                     <span asp-validation-for="FullName" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
@@ -49,7 +49,7 @@
                 </div>
                 <div class="mb-4" id="adminPasswordWrap">
                     <label asp-for="AdminPassword" class="form-label"></label>
-                    <input asp-for="AdminPassword" class="form-control" autocomplete="new-password" inputmode="numeric" maxlength="4" pattern="^\d{4}$" />
+                    <input asp-for="AdminPassword" class="form-control" autocomplete="one-time-code" inputmode="numeric" maxlength="4" minlength="4" pattern="^\d{4}$" />
                     <span asp-validation-for="AdminPassword" class="text-danger"></span>
                     <div class="form-text admin-password-text">Код доступа администратора состоит из 4 цифр.</div>
                 </div>

@@ -14,9 +14,9 @@ namespace AutoSalonGrida.Controllers;
 public class AdminController : Controller
 {
     private const int MinGalleryImagesCount = 3;
-    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> AllowedCarImageExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".jpg", ".jpeg", ".png", ".webp"
+        ".jpg", ".jpeg", ".webp"
     };
     private readonly ApplicationDbContext _context;
     private readonly IWebHostEnvironment _environment;
@@ -320,15 +320,16 @@ public class AdminController : Controller
     {
         if (image is null || image.Length == 0) return null;
 
-        var folder = Path.Combine(_environment.WebRootPath, "assets", "images");
+        var folder = Path.Combine(_environment.WebRootPath, "images", "cars");
         Directory.CreateDirectory(folder);
 
-        var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(image.FileName)}";
+        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+        var fileName = $"car-{Guid.NewGuid():N}{extension}";
         var path = Path.Combine(folder, fileName);
 
         await using var stream = System.IO.File.Create(path);
         await image.CopyToAsync(stream);
-        return $"/assets/images/{fileName}";
+        return $"/images/cars/{fileName}";
     }
 
 
@@ -410,9 +411,9 @@ public class AdminController : Controller
         }
 
         var extension = Path.GetExtension(file.FileName);
-        if (!AllowedImageExtensions.Contains(extension))
+        if (!AllowedCarImageExtensions.Contains(extension))
         {
-            ModelState.AddModelError(fieldName, "Поддерживаются только JPG, PNG и WEBP изображения.");
+            ModelState.AddModelError(fieldName, "Для фотографий автомобиля поддерживаются только JPG и WEBP.");
         }
     }
 }

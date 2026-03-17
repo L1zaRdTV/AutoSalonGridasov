@@ -3,8 +3,8 @@
     ViewData["Title"] = "Корзина";
     string ResolveImage(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path)) return Url.Content("~/images/cars/default-car.svg");
-        if (!path.Contains("/images/cars/", StringComparison.OrdinalIgnoreCase)) return Url.Content("~/images/cars/default-car.svg");
+        if (string.IsNullOrWhiteSpace(path)) return Url.Content("~/assets/images/default-car.svg");
+        if (!path.Contains("/assets/images/", StringComparison.OrdinalIgnoreCase)) return Url.Content("~/assets/images/default-car.svg");
         return path.StartsWith("~", StringComparison.Ordinal) ? Url.Content(path) : path;
     }
 }

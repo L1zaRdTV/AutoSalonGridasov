@@ -31,7 +31,7 @@ public class ProfileViewModel
     [Display(Name = "О себе")]
     public string? About { get; set; }
 
-    public string AvatarUrl { get; set; } = "/images/cars/default-car.svg";
+    public string AvatarUrl { get; set; } = "/assets/images/default-car.svg";
 
     [Display(Name = "Новая аватарка")]
     public IFormFile? AvatarFile { get; set; }

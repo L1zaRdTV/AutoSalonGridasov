@@ -6,17 +6,17 @@ public sealed class WikimediaCarPhotoService : ICarPhotoService
 {
     private static readonly IReadOnlyList<string> SchematicPhotos =
     [
-        "/images/cars/car-1.svg",
-        "/images/cars/car-2.svg",
-        "/images/cars/car-3.svg",
-        "/images/cars/car-4.svg",
-        "/images/cars/car-5.svg",
-        "/images/cars/car-6.svg",
-        "/images/cars/car-7.svg",
-        "/images/cars/car-8.svg",
-        "/images/cars/car-9.svg",
-        "/images/cars/car-10.svg",
-        "/images/cars/default-car.svg"
+        "/assets/images/car-1.svg",
+        "/assets/images/car-2.svg",
+        "/assets/images/car-3.svg",
+        "/assets/images/car-4.svg",
+        "/assets/images/car-5.svg",
+        "/assets/images/car-6.svg",
+        "/assets/images/car-7.svg",
+        "/assets/images/car-8.svg",
+        "/assets/images/car-9.svg",
+        "/assets/images/car-10.svg",
+        "/assets/images/default-car.svg"
     ];
 
     private readonly IMemoryCache _cache;

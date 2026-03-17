@@ -72,10 +72,10 @@ public static class SeedData
         foreach (var car in existingCars)
         {
             var hasLegacyMainImage = string.IsNullOrWhiteSpace(car.ImageUrl)
-                || !car.ImageUrl.Contains("/images/cars/", StringComparison.OrdinalIgnoreCase);
+                || !car.ImageUrl.Contains("/assets/images/", StringComparison.OrdinalIgnoreCase);
 
             var shouldRefreshGallery = car.Images.Count < 3
-                || car.Images.Any(i => !i.ImagePath.Contains("/images/cars/", StringComparison.OrdinalIgnoreCase));
+                || car.Images.Any(i => !i.ImagePath.Contains("/assets/images/", StringComparison.OrdinalIgnoreCase));
 
             if (!hasLegacyMainImage && !shouldRefreshGallery)
             {

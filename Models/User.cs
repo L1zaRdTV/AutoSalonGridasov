@@ -33,7 +33,7 @@ public class User
     public string? About { get; set; }
 
     [StringLength(500)]
-    public string AvatarUrl { get; set; } = "/images/cars/default-car.svg";
+    public string AvatarUrl { get; set; } = "/assets/images/default-car.svg";
 
     public ICollection<Cart> Carts { get; set; } = new List<Cart>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();

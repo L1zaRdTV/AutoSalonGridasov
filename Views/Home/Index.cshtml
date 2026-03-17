@@ -6,10 +6,10 @@
 
     string ResolveImage(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path)) return Url.Content("~/images/cars/default-car.svg");
-        return path.Contains("/images/cars/", StringComparison.OrdinalIgnoreCase)
+        if (string.IsNullOrWhiteSpace(path)) return Url.Content("~/assets/images/default-car.svg");
+        return path.Contains("/assets/images/", StringComparison.OrdinalIgnoreCase)
             ? (path.StartsWith("~", StringComparison.Ordinal) ? Url.Content(path) : path)
-            : Url.Content("~/images/cars/default-car.svg");
+            : Url.Content("~/assets/images/default-car.svg");
     }
 }
 
@@ -30,7 +30,7 @@
             </div>
         </div>
         <div class="col-lg-5 text-center">
-            <img src="~/images/cars/hero-car.svg" class="img-fluid rounded-4 hero-image" alt="Схематическая иллюстрация автомобиля" />
+            <img src="~/assets/images/hero-car.svg" class="img-fluid rounded-4 hero-image" alt="Схематическая иллюстрация автомобиля" />
         </div>
     </div>
 </section>

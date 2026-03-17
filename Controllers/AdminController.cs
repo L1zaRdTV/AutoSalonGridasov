@@ -296,7 +296,7 @@ public class AdminController : Controller
     {
         if (image is null || image.Length == 0) return null;
 
-        var folder = Path.Combine(_environment.WebRootPath, "images", "cars");
+        var folder = Path.Combine(_environment.WebRootPath, "assets", "images");
         Directory.CreateDirectory(folder);
 
         var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(image.FileName)}";
@@ -304,7 +304,7 @@ public class AdminController : Controller
 
         await using var stream = System.IO.File.Create(path);
         await image.CopyToAsync(stream);
-        return $"/images/cars/{fileName}";
+        return $"/assets/images/{fileName}";
     }
 
 

@@ -17,7 +17,7 @@ public class AccountController : Controller
     private const string AdminRoleSecret = "5890";
     private static readonly HashSet<string> AllowedAvatarExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".jpg", ".jpeg", ".png", ".webp"
+        ".png", ".webp"
     };
 
     private readonly ApplicationDbContext _context;
@@ -193,7 +193,7 @@ public class AccountController : Controller
             var extension = Path.GetExtension(model.AvatarFile.FileName).ToLowerInvariant();
             if (!AllowedAvatarExtensions.Contains(extension))
             {
-                ModelState.AddModelError(nameof(model.AvatarFile), "Разрешены только JPG, PNG и WEBP.");
+                ModelState.AddModelError(nameof(model.AvatarFile), "Для аватарки разрешены только PNG и WEBP.");
                 return View(model);
             }
 
